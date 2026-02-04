@@ -30,7 +30,33 @@
           :title="isCollapsed ? item.label : ''"
           @click="navigateTo(item.path)"
         >
-          <span class="nav-icon" v-html="item.iconSvg"></span>
+          <!-- 首页 -->
+          <svg v-if="item.path === '/dashboard'" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+          </svg>
+          <!-- Skills -->
+          <svg v-else-if="item.path === '/skills'" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 2L15 8L21 9L17 14L18 20L12 17L6 20L7 14L3 9L9 8L12 2Z"></path>
+          </svg>
+          <!-- MCP -->
+          <svg v-else-if="item.path === '/mcp'" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2V4"></path>
+            <path d="M12 20V22"></path>
+            <path d="M2 12H4"></path>
+            <path d="M20 12H22"></path>
+          </svg>
+          <!-- Hooks -->
+          <svg v-else-if="item.path === '/hooks'" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M9 18C5.68629 18 3 15.3137 3 12C3 8.68629 5.68629 6 9 6"></path>
+            <path d="M15 6C18.3137 6 21 8.68629 21 12C21 15.3137 18.3137 18 15 18"></path>
+            <circle cx="15" cy="12" r="3"></circle>
+            <circle cx="9" cy="12" r="3"></circle>
+          </svg>
           <span class="nav-label" v-show="!isCollapsed">{{ item.label }}</span>
           <span class="nav-badge" v-if="item.badge && !isCollapsed">{{ item.badge }}</span>
         </div>
@@ -87,9 +113,7 @@
     <main class="main-content">
       <div class="content-wrapper">
         <router-view v-slot="{ Component }">
-          <transition name="page" mode="out-in">
-            <component :is="Component" />
-          </transition>
+          <component :is="Component" />
         </router-view>
       </div>
     </main>
@@ -111,40 +135,24 @@ const defaultAvatar = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 
 const navItems = [
-  {
-    path: '/dashboard',
-    label: '首页',
-    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect></svg>'
-  },
-  {
-    path: '/skills',
-    label: 'Skills',
-    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L15 8L21 9L17 14L18 20L12 17L6 20L7 14L3 9L9 8L12 2Z"></path></svg>'
-  },
-  {
-    path: '/mcp',
-    label: 'MCP',
-    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="2"></rect><circle cx="12" cy="12" r="4"></circle><path d="M12 2V4"></path><path d="M12 20V22"></path><path d="M2 12H4"></path><path d="M20 12H22"></path></svg>'
-  },
-  {
-    path: '/hooks',
-    label: 'Hooks',
-    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18C5.68629 18 3 15.3137 3 12C3 8.68629 5.68629 6 9 6"></path><path d="M15 6C18.3137 6 21 8.68629 21 12C21 15.3137 18.3137 18 15 18"></path><circle cx="15" cy="12" r="3"></circle><circle cx="9" cy="12" r="3"></circle></svg>'
-  }
+  { path: '/dashboard', label: '首页' },
+  { path: '/skills', label: 'Skills' },
+  { path: '/mcp', label: 'MCP' },
+  { path: '/hooks', label: 'Hooks' }
 ]
 
 function isActive(path) {
   return route.path === path || route.path.startsWith(path + '/')
 }
 
-function navigateTo(path) {
-  console.log('Navigate to:', path)
+async function navigateTo(path) {
   try {
-    router.push(path)
+    await router.push(path)
   } catch (e) {
-    console.error('Navigation error:', e)
-    // Fallback to direct location change
-    window.location.href = path
+    // 忽略导航到当前路由的错误
+    if (!e.message.includes('redundant')) {
+      console.error('导航错误:', e)
+    }
   }
 }
 
@@ -445,17 +453,6 @@ function handleLogout() {
 .content-wrapper {
   min-height: 100%;
   padding: 24px;
-}
-
-/* ==================== 页面切换动画 ==================== */
-.page-enter-active,
-.page-leave-active {
-  transition: opacity 0.15s ease;
-}
-
-.page-enter-from,
-.page-leave-to {
-  opacity: 0;
 }
 
 /* ==================== 响应式 ==================== */
