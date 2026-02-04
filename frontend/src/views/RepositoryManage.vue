@@ -1,9 +1,9 @@
 <template>
   <!-- 页面内容 -->
   <div class="repository-manage-page">
-    <!-- 操作栏 -->
-    <div class="action-bar">
-      <span class="repo-count">{{ repositories.length }} 个仓库</span>
+    <!-- 页面标题栏 -->
+    <div class="page-header">
+      <h2 class="page-title">Skills 仓库管理</h2>
       <button class="btn btn--primary" @click="showAddDialog">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 5v14M5 12h14"/>
@@ -250,21 +250,32 @@ function formatDate(dateStr) {
   position: relative;
 }
 
+/* ==================== 页面标题栏 ==================== */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-6);
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
 /* ==================== 操作栏 ==================== */
 .action-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
-  padding: 16px 20px;
-  background: #1e1e1e;
-  border: 1px solid #333333;
-  border-radius: 8px;
+  margin-bottom: var(--space-6);
 }
 
 .repo-count {
   font-size: 13px;
-  color: #888;
+  color: var(--color-text-muted);
 }
 
 /* ==================== 按钮 ==================== */

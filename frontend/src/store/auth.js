@@ -4,6 +4,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authApi } from '@/api/auth'
+import { userApi } from '@/api/user'
 
 export const useAuthStore = defineStore('auth', () => {
   // State
@@ -115,6 +116,54 @@ export const useAuthStore = defineStore('auth', () => {
     setUser(null)
   }
 
+  // 更新个人信息
+  async function updateProfile(data) {
+    if (!token.value) return { success: false, message: '未登录' }
+
+    try {
+      const res = await userApi.updateProfile(data)
+      if (res.success) {
+        // 更新本地用户信息
+        await fetchCurrentUser()
+        return { success: true, message: res.message }
+      }
+      return { success: false, message: res.message }
+    } catch (e) {
+      console.error('Update profile error:', e)
+      return { success: false, message: '更新个人信息失败' }
+    }
+  }
+
+  // 修改密码
+  async function changePassword(oldPassword, newPassword) {
+    if (!token.value) return { success: false, message: '未登录' }
+
+    try {
+      const res = await userApi.changePassword(oldPassword, newPassword)
+      return res
+    } catch (e) {
+      console.error('Change password error:', e)
+      return { success: false, message: '修改密码失败' }
+    }
+  }
+
+  // 更新头像
+  async function updateAvatar(avatarUrl) {
+    if (!token.value) return { success: false, message: '未登录' }
+
+    try {
+      const res = await userApi.updateAvatar(avatarUrl)
+      if (res.success) {
+        await fetchCurrentUser()
+        return { success: true, message: res.message }
+      }
+      return { success: false, message: res.message }
+    } catch (e) {
+      console.error('Update avatar error:', e)
+      return { success: false, message: '更新头像失败' }
+    }
+  }
+
   return {
     token,
     user,
@@ -127,6 +176,9 @@ export const useAuthStore = defineStore('auth', () => {
     register,
     handleCallback,
     fetchCurrentUser,
-    logout
+    logout,
+    updateProfile,
+    changePassword,
+    updateAvatar
   }
 })

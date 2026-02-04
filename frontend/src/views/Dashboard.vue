@@ -99,24 +99,30 @@
               </svg>
               <p>暂无数据</p>
             </div>
-            <div v-else class="resource-list">
+            <div v-else class="resource-grid">
               <div
                 v-for="(item, index) in topResources"
                 :key="item.id"
-                class="resource-item"
+                class="resource-card"
                 @click="goToDetail(item.id)"
               >
-                <span class="resource-rank" :class="`rank-${Math.min(index + 1, 3)}`">{{ index + 1 }}</span>
-                <div class="resource-icon" :class="`type-${item.type}`">
-                  <component :is="getTypeIcon(item.type)" />
-                </div>
-                <div class="resource-info">
-                  <div class="resource-name">{{ item.name }}</div>
-                  <div class="resource-meta">
-                    <span class="resource-type">{{ item.type.toUpperCase() }}</span>
-                    <span class="resource-dot">·</span>
-                    <span>{{ formatNumber(item.install_count) }} 安装</span>
+                <div class="resource-card-header">
+                  <span class="resource-rank" :class="`rank-${Math.min(index + 1, 3)}`">{{ index + 1 }}</span>
+                  <div class="resource-icon" :class="`type-${item.type}`">
+                    <component :is="getTypeIcon(item.type)" />
                   </div>
+                </div>
+                <h4 class="resource-card-name">{{ item.name }}</h4>
+                <p class="resource-card-desc">{{ item.description || '暂无描述' }}</p>
+                <div class="resource-card-meta">
+                  <span class="resource-type">{{ item.type.toUpperCase() }}</span>
+                  <span class="resource-stat">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15"/>
+                      <path d="M7 10L12 15L17 10M12 15V3"/>
+                    </svg>
+                    {{ formatNumber(item.install_count) }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -141,23 +147,23 @@
               </svg>
               <p>暂无数据</p>
             </div>
-            <div v-else class="resource-list">
+            <div v-else class="resource-grid">
               <div
                 v-for="item in latestResources"
                 :key="item.id"
-                class="resource-item"
+                class="resource-card"
                 @click="goToDetail(item.id)"
               >
-                <div class="resource-icon" :class="`type-${item.type}`">
-                  <component :is="getTypeIcon(item.type)" />
-                </div>
-                <div class="resource-info">
-                  <div class="resource-name">{{ item.name }}</div>
-                  <div class="resource-meta">
-                    <span class="resource-type">{{ item.type.toUpperCase() }}</span>
-                    <span class="resource-dot">·</span>
-                    <span>{{ formatDate(item.created_at) }}</span>
+                <div class="resource-card-header">
+                  <div class="resource-icon" :class="`type-${item.type}`">
+                    <component :is="getTypeIcon(item.type)" />
                   </div>
+                </div>
+                <h4 class="resource-card-name">{{ item.name }}</h4>
+                <p class="resource-card-desc">{{ item.description || '暂无描述' }}</p>
+                <div class="resource-card-meta">
+                  <span class="resource-type">{{ item.type.toUpperCase() }}</span>
+                  <span class="resource-date">{{ formatDate(item.created_at) }}</span>
                 </div>
               </div>
             </div>
@@ -174,23 +180,29 @@
         <div v-if="searchResults.length === 0" class="empty-state">
           <p>未找到相关资源</p>
         </div>
-        <div v-else class="resource-list">
+        <div v-else class="resource-grid">
           <div
             v-for="item in searchResults"
             :key="item.id"
-            class="resource-item"
+            class="resource-card"
             @click="goToDetail(item.id)"
           >
-            <div class="resource-icon" :class="`type-${item.type}`">
-              <component :is="getTypeIcon(item.type)" />
-            </div>
-            <div class="resource-info">
-              <div class="resource-name">{{ item.name }}</div>
-              <div class="resource-meta">
-                <span class="resource-type">{{ item.type.toUpperCase() }}</span>
-                <span class="resource-dot">·</span>
-                <span>{{ formatNumber(item.install_count) }} 安装</span>
+            <div class="resource-card-header">
+              <div class="resource-icon" :class="`type-${item.type}`">
+                <component :is="getTypeIcon(item.type)" />
               </div>
+            </div>
+            <h4 class="resource-card-name">{{ item.name }}</h4>
+            <p class="resource-card-desc">{{ item.description || '暂无描述' }}</p>
+            <div class="resource-card-meta">
+              <span class="resource-type">{{ item.type.toUpperCase() }}</span>
+              <span class="resource-stat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15"/>
+                  <path d="M7 10L12 15L17 10M12 15V3"/>
+                </svg>
+                {{ formatNumber(item.install_count) }}
+              </span>
             </div>
           </div>
         </div>
@@ -246,7 +258,7 @@ async function loadOverview() {
 
 async function loadTopResources() {
   try {
-    const res = await statsApi.getTop({ limit: 8 })
+    const res = await statsApi.getTop({ limit: 6 })
     if (res.success) {
       topResources.value = res.data
     }
@@ -257,7 +269,7 @@ async function loadTopResources() {
 
 async function loadLatestResources() {
   try {
-    const res = await statsApi.getLatest({ limit: 8 })
+    const res = await statsApi.getLatest({ limit: 6 })
     if (res.success) {
       latestResources.value = res.data
     }
@@ -383,6 +395,9 @@ export default {
   flex: 1;
   overflow-y: auto;
   padding: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 /* 搜索区域 */
@@ -391,6 +406,7 @@ export default {
   flex-direction: column;
   align-items: center;
   margin-bottom: var(--space-10);
+  margin-top: var(--space-8);
 }
 
 .tagline {
@@ -402,7 +418,7 @@ export default {
   display: block;
   font-size: 28px;
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--color-blue);
   margin-bottom: var(--space-2);
 }
 
@@ -591,39 +607,48 @@ export default {
   color: var(--color-accent-hover);
 }
 
-/* 资源列表 */
-.resource-list {
+/* 资源卡片网格 */
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.resource-card {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  cursor: pointer;
+  transition: all var(--transition-base);
   display: flex;
   flex-direction: column;
 }
 
-.resource-item {
+.resource-card:hover {
+  border-color: var(--color-accent-primary);
+  box-shadow: var(--shadow-accent);
+  transform: translateY(-2px);
+}
+
+.resource-card-header {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-5);
-  cursor: pointer;
-  transition: background var(--transition-fast);
-}
-
-.resource-item:hover {
-  background: var(--color-bg-elevated);
-}
-
-.resource-item + .resource-item {
-  border-top: 1px solid var(--color-border);
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
 }
 
 .resource-rank {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
   font-weight: 600;
-  background: var(--color-bg-elevated);
+  background: var(--color-bg-hover);
   color: var(--color-text-muted);
 }
 
@@ -643,9 +668,9 @@ export default {
 }
 
 .resource-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -653,17 +678,17 @@ export default {
 }
 
 .resource-icon svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
 
 .resource-icon.type-skill {
-  background: var(--color-accent-glow);
+  background: var(--color-accent-light);
   color: var(--color-accent-primary);
 }
 
 .resource-icon.type-mcp {
-  background: rgba(0, 255, 0, 0.15);
+  background: rgba(16, 185, 129, 0.15);
   color: var(--color-success);
 }
 
@@ -672,41 +697,66 @@ export default {
   color: #a855f7;
 }
 
-.resource-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.resource-name {
+.resource-card-name {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text-primary);
+  margin: 0 0 var(--space-2);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  margin-bottom: 2px;
 }
 
-.resource-meta {
+.resource-card-desc {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-3);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+  min-height: 34px;
+}
+
+.resource-card-meta {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
+  justify-content: space-between;
+  font-size: 11px;
   color: var(--color-text-muted);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
 }
 
 .resource-type {
   font-weight: 500;
+  padding: 2px 8px;
+  background: var(--color-bg-hover);
+  border-radius: 4px;
 }
 
-.resource-dot {
-  color: var(--color-border-light);
+.resource-stat,
+.resource-date {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.resource-stat svg {
+  width: 12px;
+  height: 12px;
 }
 
 /* 搜索结果 */
 .search-results {
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
+}
+
+.search-results .resource-grid {
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .search-results-header {
@@ -767,6 +817,16 @@ export default {
 
   .content-grid {
     grid-template-columns: 1fr;
+  }
+
+  .resource-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--space-2);
+    padding: var(--space-3);
+  }
+
+  .resource-card {
+    padding: var(--space-3);
   }
 
   .tagline-main {

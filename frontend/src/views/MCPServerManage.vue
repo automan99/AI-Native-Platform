@@ -1,20 +1,8 @@
 <template>
   <div class="mcp-manage-page">
-    <!-- 操作栏 -->
-    <div class="action-bar">
-      <span class="server-count">{{ filteredServers.length }} 个 Server</span>
-      <div class="ownership-filter">
-        <button
-          class="ownership-btn"
-          :class="{ active: ownershipFilter === 'all' }"
-          @click="ownershipFilter = 'all'"
-        >全部</button>
-        <button
-          class="ownership-btn"
-          :class="{ active: ownershipFilter === 'mine' }"
-          @click="ownershipFilter = 'mine'"
-        >我的</button>
-      </div>
+    <!-- 页面标题栏 -->
+    <div class="page-header">
+      <h2 class="page-title">MCP Server 管理</h2>
       <button class="btn btn--primary" @click="showAddDialog">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 5v14M5 12h14"/>
@@ -702,20 +690,13 @@ const getCurrentUser = () => {
 }
 
 const currentUser = ref(getCurrentUser())
-const ownershipFilter = ref('all')
 const servers = ref([])
 const loading = ref(false)
 const showServerDialog = ref(false)
 const editServerData = ref(null)
 
-// Filtered servers based on ownership
-const filteredServers = computed(() => {
-  let result = servers.value
-  if (ownershipFilter.value === 'mine' && currentUser.value) {
-    result = result.filter(s => s.user_id === currentUser.value.id)
-  }
-  return result
-})
+// All servers (no filtering)
+const filteredServers = computed(() => servers.value)
 
 // Check if current user can edit the server
 function canEditServer(server) {
@@ -854,21 +835,32 @@ function getSyncStatusText(server) {
   position: relative;
 }
 
+/* ==================== 页面标题栏 ==================== */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-6);
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
 /* ==================== 操作栏 ==================== */
 .action-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
-  padding: 16px 20px;
-  background: #1e1e1e;
-  border: 1px solid #333;
-  border-radius: 8px;
+  margin-bottom: var(--space-6);
 }
 
 .server-count {
   font-size: 13px;
-  color: #888;
+  color: var(--color-text-muted);
 }
 
 /* ==================== 按钮 ==================== */
@@ -917,36 +909,6 @@ function getSyncStatusText(server) {
 .btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-/* 归属筛选 */
-.ownership-filter {
-  display: flex;
-  align-items: center;
-  background: #121212;
-  border: 1px solid #333;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.ownership-btn {
-  padding: 8px 16px;
-  background: transparent;
-  border: none;
-  color: #888;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.ownership-btn:hover {
-  color: #ccc;
-}
-
-.ownership-btn.active {
-  background: #3b82f6;
-  color: #fff;
 }
 
 /* ==================== Server 列表 ==================== */

@@ -14,42 +14,47 @@
           :class="{ active: activeTab === 'servers' }"
           @click="activeTab = 'servers'"
         >
-          Servers
+          MCP Server
           <span class="tab-count">{{ totalServers }}</span>
         </button>
       </div>
 
       <!-- Tools 内容 -->
       <div v-if="activeTab === 'tools'" class="content">
-        <!-- 搜索栏 -->
-        <div class="search-bar">
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="M21 21l-4.35-4.35"/>
-          </svg>
-          <input
-            v-model="searchQuery"
-            type="text"
-            class="search-input"
-            placeholder="Search tools..."
-          />
-          <span class="search-shortcut">⌘K</span>
-        </div>
+        <!-- 搜索和筛选栏 -->
+        <div class="search-filter-bar">
+          <div class="search-bar">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+            <input
+              v-model="searchQuery"
+              type="text"
+              class="search-input"
+              placeholder="Search tools..."
+            />
+            <span class="search-shortcut">⌘K</span>
+          </div>
 
-        <!-- Server 筛选 -->
-        <div class="filter-tabs">
-          <button
-            class="filter-tab"
-            :class="{ active: !selectedServer }"
-            @click="selectedServer = ''"
-          >All Servers</button>
-          <button
-            v-for="server in serverList"
-            :key="server.id"
-            class="filter-tab"
-            :class="{ active: selectedServer === server.id }"
-            @click="selectedServer = server.id"
-          >{{ server.name }} ({{ server.tool_count }})</button>
+          <!-- Server 筛选下拉 -->
+          <div class="server-filter">
+            <svg class="filter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="4" y="4" width="16" height="16" rx="2"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <select
+              v-model="selectedServer"
+              class="server-select"
+            >
+              <option value="">All Servers</option>
+              <option
+                v-for="server in serverList"
+                :key="server.id"
+                :value="server.id"
+              >{{ server.name }} ({{ server.tool_count }})</option>
+            </select>
+          </div>
         </div>
 
         <!-- Tools 网格 -->
@@ -93,40 +98,31 @@
       </div>
 
       <!-- Servers 内容 -->
-      <div v-else class="content">
-        <!-- 操作栏 -->
-        <div class="action-bar">
-          <!-- 归属筛选 -->
-          <div class="ownership-filter">
-            <button
-              class="filter-btn"
-              :class="{ active: serversOwnershipFilter === 'all' }"
-              @click="serversOwnershipFilter = 'all'"
-            >All</button>
-            <button
-              class="filter-btn"
-              :class="{ active: serversOwnershipFilter === 'mine' }"
-              @click="serversOwnershipFilter = 'mine'"
-            >Mine</button>
-          </div>
-          <button class="btn-primary" @click="showAddDialog">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M12 4v16m8-8H4"/>
-            </svg>
-            Add Server
-          </button>
+      <div v-else class="content servers-content">
+        <!-- 搜索栏 -->
+        <div class="search-bar server-search-bar">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <input
+            v-model="serverSearchQuery"
+            type="text"
+            class="search-input"
+            placeholder="Search servers..."
+          />
         </div>
 
-        <!-- 服务器列表 -->
+        <!-- 服务器网格 -->
         <div v-if="filteredServers.length === 0" class="empty-state">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <rect x="4" y="4" width="16" height="16" rx="2"/>
             <circle cx="12" cy="12" r="4"/>
           </svg>
-          <p>No servers found</p>
+          <p>暂无服务器</p>
         </div>
 
-        <div v-else class="servers-list">
+        <div v-else class="servers-grid">
           <div
             v-for="server in filteredServers"
             :key="server.id"
@@ -134,38 +130,32 @@
             @click="showServerDetail(server)"
           >
             <div class="server-header">
-              <div class="server-info">
-                <div class="server-type-badge" :class="`type--${server.transport_type}`">
-                  {{ server.transport_type.toUpperCase() }}
-                </div>
-                <h3 class="server-name">{{ server.name }}</h3>
-                <p class="server-desc">{{ server.description || 'No description' }}</p>
+              <div class="server-type-badge" :class="`type--${server.transport_type}`">
+                {{ server.transport_type.toUpperCase() }}
               </div>
               <div class="server-status" :class="server.enabled ? 'active' : 'inactive'">
-                {{ server.enabled ? 'Active' : 'Inactive' }}
+                {{ server.enabled ? '运行中' : '已停用' }}
               </div>
             </div>
+            <h3 class="server-name">{{ server.name }}</h3>
+            <p class="server-desc">{{ server.description || '暂无描述' }}</p>
             <div class="server-meta">
               <span class="meta-item">
                 <svg viewBox="0 0 16 16" fill="currentColor">
                   <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l1.6-1.6a1 1 0 00-1.4 0l-1.6-1.6zM12.3 8.7a1 1 0 000-1.4l-1.6-1.6a1 1 0 00-1.4 0l-1.6 1.6a1 1 0 001.4 0l1.6 1.6z"/>
                 </svg>
-                {{ server.total_tools || 0 }} Tools
-              </span>
-              <span v-if="server.total_resources" class="meta-item">
-                <svg viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M8 0a8 8 0 100 16A8 8 0 008 0z"/>
-                  <path d="M8 4a4 4 0 100 8 4 4 0 000-8z"/>
-                </svg>
-                {{ server.total_resources }} Resources
+                {{ server.total_tools || 0 }} 工具
               </span>
               <span v-if="server.contributor" class="meta-item">
                 <svg viewBox="0 0 16 16" fill="currentColor">
                   <path d="M8 8a3 3 0 100-6 3 3 0 000 6z"/>
                   <path d="M14 7.2a2 2 0 00-2-2c-.526 0-1 .135-1.4.355a4.969 4.969 0 00-6 0c-.4.22-.22-.874-.355-1.4-.355a2 2 0 00-2 2c0 .608.272 1.152.7 1.572a5 5 0 0010 0c.428.42.7.964.7 1.572z"/>
                 </svg>
-                {{ server.contributor.name || server.contributor.username || 'Unknown' }}
+                {{ server.contributor.name || server.contributor.username || '未知' }}
               </span>
+            </div>
+            <div class="server-footer">
+              <span class="created-time">添加于 {{ formatDate(server.created_at) }}</span>
             </div>
           </div>
         </div>
@@ -279,8 +269,8 @@ const selectedTool = ref(null)
 const showModal = ref(false)
 const calling = ref(false)
 const searchQuery = ref('')
+const serverSearchQuery = ref('')
 const selectedServer = ref('')
-const serversOwnershipFilter = ref('all')
 const selectedServerData = ref(null)
 const showServerModal = ref(false)
 const showServerDialog = ref(false)
@@ -319,8 +309,12 @@ const filteredTools = computed(() => {
 const filteredServers = computed(() => {
   let servers = serversList.value
 
-  if (serversOwnershipFilter.value === 'mine' && currentUser.value) {
-    servers = servers.filter(s => s.contributor && s.contributor.id === currentUser.value.id)
+  if (serverSearchQuery.value.trim()) {
+    const query = serverSearchQuery.value.toLowerCase()
+    servers = servers.filter(s =>
+      s.name.toLowerCase().includes(query) ||
+      (s.description && s.description.toLowerCase().includes(query))
+    )
   }
 
   return servers
@@ -402,11 +396,26 @@ function onServerDialogSuccess() {
   loadData()
 }
 
+function formatDate(dateString) {
+  if (!dateString) return '未知'
+  const date = new Date(dateString)
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  })
+}
+
 // Keyboard shortcuts
 function handleKeydown(e) {
   if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
     e.preventDefault()
-    document.querySelector('.search-input')?.focus()
+    // 根据当前标签页聚焦对应的搜索框
+    if (activeTab.value === 'tools') {
+      document.querySelector('.search-filter-bar .search-input')?.focus()
+    } else {
+      document.querySelector('.servers-content .search-input')?.focus()
+    }
   }
 }
 
@@ -470,18 +479,34 @@ onUnmounted(() => {
 
 /* ===== Content Area ===== */
 .content {
-  padding: 0;
+  padding: var(--space-6);
   overflow-y: auto;
 }
 
-/* ===== Search Bar ===== */
+.servers-content {
+  /* Inherits padding from .content */
+}
+
+/* ===== Search & Filter Bar ===== */
+.search-filter-bar {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  margin-bottom: var(--space-6);
+}
+
 .search-bar {
   display: flex;
   align-items: center;
+  flex: 1;
   padding: var(--space-2) var(--space-4);
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
+}
+
+.server-search-bar {
+  flex: none;
   margin-bottom: var(--space-6);
 }
 
@@ -517,34 +542,38 @@ onUnmounted(() => {
   color: var(--color-text-muted);
 }
 
-/* ===== Filter Tabs ===== */
-.filter-tabs {
+/* ===== Server Filter ===== */
+.server-filter {
   display: flex;
+  align-items: center;
   gap: var(--space-2);
-  margin-bottom: var(--space-6);
-  flex-wrap: wrap;
-}
-
-.filter-tab {
   padding: var(--space-2) var(--space-4);
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  border-radius: 20px;
-  color: var(--color-text-secondary);
-  font-size: 13px;
-  cursor: pointer;
-  transition: all var(--transition-fast);
+  border-radius: var(--radius-lg);
+  min-width: 220px;
 }
 
-.filter-tab:hover {
-  background: var(--color-bg-hover);
+.filter-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.server-select {
+  flex: 1;
+  border: none;
+  background: none;
+  padding: 4px 0;
+  font-size: 14px;
   color: var(--color-text-primary);
+  cursor: pointer;
+  outline: none;
 }
 
-.filter-tab.active {
-  background: var(--color-accent-primary);
-  border-color: var(--color-accent-primary);
-  color: white;
+.server-select:focus {
+  outline: none;
 }
 
 /* ===== Tools Grid ===== */
@@ -632,43 +661,9 @@ onUnmounted(() => {
   color: var(--color-success);
 }
 
-/* ===== Action Bar ===== */
-.action-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-6);
-}
-
-.ownership-filter {
-  display: flex;
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
-
-.filter-btn {
-  padding: var(--space-2) var(--space-4);
-  background: transparent;
-  border: none;
-  color: var(--color-text-secondary);
-  font-size: 13px;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.filter-btn:hover {
-  color: var(--color-text-primary);
-}
-
-.filter-btn.active {
-  background: var(--color-accent-primary);
-  color: white;
-}
-
+/* ===== Buttons ===== */
 .btn-primary {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2) var(--space-5);
@@ -708,11 +703,11 @@ onUnmounted(() => {
   color: var(--color-text-primary);
 }
 
-/* ===== Servers List ===== */
-.servers-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+/* ===== Servers Grid ===== */
+.servers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-4);
 }
 
 .server-card {
@@ -727,12 +722,13 @@ onUnmounted(() => {
 .server-card:hover {
   border-color: var(--color-accent-primary);
   box-shadow: var(--shadow-accent);
+  transform: translateY(-2px);
 }
 
 .server-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: var(--space-3);
 }
 
@@ -756,16 +752,22 @@ onUnmounted(() => {
 }
 
 .server-name {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin: 0 0 6px;
+  margin: 0 0 8px;
 }
 
 .server-desc {
   font-size: 13px;
   color: var(--color-text-secondary);
-  margin: 0;
+  margin: 0 0 16px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 38px;
 }
 
 .server-status {
@@ -802,6 +804,20 @@ onUnmounted(() => {
 .meta-item svg {
   width: 14px;
   height: 14px;
+}
+
+.server-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.created-time {
+  font-size: 12px;
+  color: var(--color-text-muted);
 }
 
 /* ===== Modal ===== */
@@ -984,6 +1000,10 @@ onUnmounted(() => {
     grid-template-columns: 1fr;
   }
 
+  .servers-grid {
+    grid-template-columns: 1fr;
+  }
+
   .tabs-bar {
     padding: 12px 16px 0;
   }
@@ -992,18 +1012,13 @@ onUnmounted(() => {
     padding: 16px;
   }
 
-  .action-bar {
+  .search-filter-bar {
     flex-direction: column;
-    gap: 12px;
     align-items: stretch;
   }
 
-  .ownership-filter {
-    width: 100%;
-  }
-
-  .filter-btn {
-    flex: 1;
+  .server-filter {
+    min-width: auto;
   }
 }
 </style>

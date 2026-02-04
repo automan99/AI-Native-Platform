@@ -27,6 +27,7 @@ def create_app(config_class=Config):
     from app.api.stats import stats_bp
     from app.api.auth import auth_bp
     from app.api.mcp import mcp_bp
+    from app.api.user import user_bp
 
     # auth_bp 已有 url_prefix，不需要再添加
     app.register_blueprint(resources_bp, url_prefix='/api')
@@ -34,6 +35,7 @@ def create_app(config_class=Config):
     app.register_blueprint(stats_bp, url_prefix='/api')
     app.register_blueprint(auth_bp)  # 使用 blueprint 中定义的 url_prefix
     app.register_blueprint(mcp_bp)  # MCP blueprint 已有 url_prefix
+    app.register_blueprint(user_bp, url_prefix='/api/user')
 
     # 创建数据库表
     with app.app_context():

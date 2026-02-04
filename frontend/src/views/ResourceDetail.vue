@@ -1,131 +1,56 @@
 <template>
-  <div class="resource-detail-page">
-    <!-- 左侧导航 -->
-    <aside class="sidebar">
-      <div class="sidebar-logo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 2L15 8L21 9L17 14L18 20L12 17L6 20L7 14L3 9L9 8L12 2Z"/>
-        </svg>
-        <span>AI Native 研发平台</span>
-      </div>
-      <nav class="sidebar-nav">
-        <router-link to="/dashboard" class="nav-item">Dashboard</router-link>
-        <router-link to="/skills" class="nav-item">Skills</router-link>
-        <router-link to="/mcp" class="nav-item">MCP Tools</router-link>
-        <router-link to="/hooks" class="nav-item">Hooks</router-link>
-        <router-link to="/admin" class="nav-item">Settings</router-link>
-      </nav>
-      <div class="sidebar-footer">
-        <div class="user-info" v-if="currentUser">
-          <div class="user-avatar">{{ (currentUser.name || currentUser.username || 'U').charAt(0).toUpperCase() }}</div>
-          <div class="user-details">
-            <div class="user-name">{{ currentUser.name || currentUser.username }}</div>
-            <div class="user-role">{{ currentUser.role || 'Developer' }}</div>
-          </div>
-        </div>
-      </div>
-    </aside>
+  <main class="resource-detail-page">
+    <!-- 加载状态 -->
+    <div v-if="loading" class="loading-state">
+      <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="20"/>
+      </svg>
+    </div>
 
-    <!-- 右侧内容 -->
-    <main class="main-content">
-      <!-- 加载状态 -->
-      <div v-if="loading" class="loading-state">
-        <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="20"/>
-        </svg>
-      </div>
+    <template v-else-if="resource">
+      <div class="detail-layout">
+        <!-- 左侧信息面板 -->
+        <aside class="info-panel">
+          <!-- 返回按钮 -->
+          <button class="back-button" @click="$router.back()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            返回
+          </button>
 
-      <div v-else-if="resource" class="detail-container">
-        <!-- 返回按钮 -->
-        <button class="back-button" @click="$router.back()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M19 12H5M12 19l-7-7 7-7"/>
-          </svg>
-          返回
-        </button>
+          <!-- 资源标题和类型 -->
+          <h1 class="resource-name">{{ resource.name }}</h1>
 
-        <!-- 重新设计的头部 -->
-        <div class="detail-header">
-          <!-- 第一行：名称 + 类型 + 版本 + 元信息 -->
-          <div class="header-row header-row-main">
-            <h1 class="resource-name">{{ resource.name }}</h1>
-            <div class="header-right">
-              <div class="header-badges">
-                <div class="type-badge" :class="`type-${resource.type}`">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M12 2L15 8L21 9L17 14L18 20L12 17L6 20L7 14L3 9L9 8L12 2Z"/>
-                  </svg>
-                  {{ resource.type.toUpperCase() }}
-                </div>
-                <span class="version">{{ resource.version || 'v1.0.0' }}</span>
-              </div>
-              <div class="header-meta-inline">
-                <span v-if="resource.repository_owner" class="meta-item" title="仓库添加者">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M20 21v-2c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                  </svg>
-                  {{ resource.repository_owner }}
-                </span>
-                <span v-if="resource.repository_url" class="meta-item link-item" @click="openRepository" title="打开仓库">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M3 7v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2h-6l-2-2H5c-1.1 0-2 .9-2 2z"/>
-                  </svg>
-                  <svg class="external-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5c-1.1 0-2-.9-2-2V8c0-1.1.9-2 2-2h6"/>
-                    <polyline points="15 3 21 3 21 9"/>
-                    <line x1="10" y1="14" x2="21" y2="3"/>
-                  </svg>
-                </span>
-                <span class="meta-divider" v-if="(resource.repository_owner || resource.repository_url) && (resource.updated_at || resource.view_count || resource.install_count)">•</span>
-                <span class="meta-item">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M12 8v4l3 3m-3-3v8"/>
-                    <path d="M6 12h6"/>
-                    <circle cx="12" cy="12" r="10"/>
-                  </svg>
-                  {{ formatDate(resource.updated_at) }}
-                </span>
-                <span class="meta-divider">•</span>
-                <span class="meta-item stat">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                  </svg>
-                  {{ formatNumber(resource.view_count) }}
-                </span>
-                <span class="meta-divider">•</span>
-                <span class="meta-item stat">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M21 15v4c0 .5304-.2107 1.0391-.5858 1.4142-.3905.3752-.8787.5858-1.4142.5858H5c-.5304 0-1.0391-.2107-1.4142-.5858C3.2107 17.0391 3 16.5304 3 16v-4"/>
-                    <path d="M7 10l5 5 5-5"/>
-                    <path d="M12 3v12"/>
-                  </svg>
-                  {{ formatNumber(resource.install_count) }}
-                </span>
-              </div>
-            </div>
+          <!-- 类型徽章 -->
+          <div class="type-badge" :class="`type-${resource.type}`">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 2L15 8L21 9L17 14L18 20L12 17L6 20L7 14L3 9L9 8L12 2Z"/>
+            </svg>
+            <span>{{ resource.type.toUpperCase() }}</span>
           </div>
 
-          <!-- 第二行：描述 -->
-          <div v-if="resource.description" class="header-description">
+          <!-- 描述 -->
+          <div v-if="resource.description" class="description">
             {{ resource.description }}
           </div>
 
-          <!-- 第三行：安装命令 -->
-          <div class="command-area">
-            <span class="command-prompt">$</span>
-            <code class="command-text">{{ resource.install_command }}</code>
-            <button class="copy-icon-btn" @click="copyCommand" :title="copied ? '已复制!' : '复制命令'">
-              <svg v-if="!copied" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="9" y="9" width="13" height="13" rx="2"/>
-                <path d="M5 15H4c-.5304 0-1.0391-.2107-1.4142-.5858C2.2107 14.2107 2 13.5304 2 13V4c0-.5304.2107-1.0391.5858-1.4142C2.9609 2.2107 3.4696 2 4 2h9c.5304 0 1.0391.2107 1.4142.5858C14.7893 2.7893 15 3.4696 15 4v1"/>
-              </svg>
-              <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M20 6L9 17l-5-5"/>
-              </svg>
-            </button>
-            <button class="install-inline-btn" @click="handleInstall" :disabled="installing">
+          <!-- 安装命令 -->
+          <div class="install-section">
+            <div class="command-box">
+              <span class="prompt">$</span>
+              <code class="command">{{ resource.install_command }}</code>
+              <button class="copy-btn" @click="copyCommand" :title="copied ? '已复制!' : '复制'">
+                <svg v-if="!copied" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="9" y="9" width="13" height="13" rx="2"/>
+                  <path d="M5 15H4c-.5304 0-1.0391-.2107-1.4142-.5858C2.2107 14.2107 2 13.5304 2 13V4c0-.5304.2107-1.0391.5858-1.4142C2.9609 2.2107 3.4696 2 4 2h9c.5304 0 1.0391.2107 1.4142.5858C14.7893 2.7893 15 3.4696 15 4v1"/>
+                </svg>
+                <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+              </button>
+            </div>
+            <button class="install-action-btn" @click="handleInstall" :disabled="installing">
               <svg v-if="!installing" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15"/>
                 <path d="M7 10L12 15L17 10M12 15V3"/>
@@ -136,108 +61,126 @@
               {{ installing ? '安装中...' : '安装' }}
             </button>
           </div>
-        </div>
 
-        <!-- 内容 -->
-        <div v-if="resource.readme_content" class="content-section">
-          <div class="section-header">
-            <div class="section-header-left">
+          <!-- 统计信息 -->
+          <div class="stats">
+            <div class="stat-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M1 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"/>
+                <circle cx="10" cy="12" r="3"/>
+              </svg>
+              <span>{{ formatNumber(resource.view_count) }}</span>
+              <span>浏览</span>
+            </div>
+            <div class="stat-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M21 15v4c0 .5304-.2107 1.0391-.5858 1.4142-.3905.3752-.8787.5858-1.4142.5858H5c-.5304 0-1.0391-.2107-1.4142-.5858C3.2107 17.0391 3 16.5304 3 16v-4"/>
+                <path d="M7 10l5 5 5-5"/>
+                <path d="M12 3v12"/>
+              </svg>
+              <span>{{ formatNumber(resource.install_count) }}</span>
+              <span>安装</span>
+            </div>
+          </div>
+
+          <!-- 元信息 -->
+          <div class="meta-info">
+            <div class="meta-row" v-if="resource.version">
+              <span class="meta-label">版本</span>
+              <span class="meta-value">{{ resource.version }}</span>
+            </div>
+            <div class="meta-row" v-if="resource.repository_owner">
+              <span class="meta-label">作者</span>
+              <span class="meta-value">{{ resource.repository_owner }}</span>
+            </div>
+            <div class="meta-row" v-if="resource.updated_at">
+              <span class="meta-label">更新</span>
+              <span class="meta-value">{{ formatDate(resource.updated_at) }}</span>
+            </div>
+            <div class="meta-row" v-if="resource.repository_url">
+              <a class="repo-link" :href="resource.repository_url" target="_blank">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M3 7v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2h-6l-2-2H5c-1.1 0-2 .9-2 2z"/>
+                </svg>
+                打开仓库
+              </a>
+            </div>
+          </div>
+
+          <!-- 元数据 -->
+          <div v-if="resource.extra_data && Object.keys(resource.extra_data).length > 0" class="extra-data">
+            <div class="extra-data-header">元数据</div>
+            <pre class="extra-data-content">{{ JSON.stringify(resource.extra_data, null, 2) }}</pre>
+          </div>
+        </aside>
+
+        <!-- 右侧内容区域 -->
+        <section class="content-panel">
+          <div v-if="resource.readme_content" class="readme-container">
+            <div class="readme-header">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z"/>
                 <path d="M14 2V8H20"/>
               </svg>
-              <span>内容</span>
+              <span>SKILL.md</span>
+              <div class="view-mode-toggle">
+                <button
+                  class="mode-btn"
+                  :class="{ active: contentViewMode === 'preview' }"
+                  @click="contentViewMode = 'preview'"
+                  title="预览模式"
+                >
+                  预览
+                </button>
+                <button
+                  class="mode-btn"
+                  :class="{ active: contentViewMode === 'markdown' }"
+                  @click="contentViewMode = 'markdown'"
+                  title="Markdown 源码"
+                >
+                  源码
+                </button>
+              </div>
             </div>
-            <div class="view-mode-toggle">
-              <button
-                class="mode-btn"
-                :class="{ active: contentViewMode === 'preview' }"
-                @click="contentViewMode = 'preview'"
-                title="预览模式"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M1 12s4-8 11-8 11 11 0 0 0 11 8 8 8 0 0 0-11-8 8 8 0 0 0-11 8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-                <span>预览</span>
-              </button>
-              <button
-                class="mode-btn"
-                :class="{ active: contentViewMode === 'markdown' }"
-                @click="contentViewMode = 'markdown'"
-                title="Markdown 源码"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z"/>
-                  <path d="M14 2V8H20"/>
-                  <path d="M9 11h6M9 15h6"/>
-                </svg>
-                <span>Markdown</span>
-              </button>
-            </div>
+            <div v-if="contentViewMode === 'preview'" class="readme-content" v-html="renderMarkdown(resource.readme_content)"></div>
+            <pre v-else class="markdown-source">{{ resource.readme_content }}</pre>
           </div>
-          <div v-if="contentViewMode === 'preview'" class="readme-content" v-html="renderMarkdown(resource.readme_content)"></div>
-          <pre v-else class="markdown-source">{{ resource.readme_content }}</pre>
-        </div>
-
-        <!-- 元数据 -->
-        <div v-if="resource.extra_data && Object.keys(resource.extra_data).length > 0" class="content-section">
-          <div class="section-header">
+          <div v-else class="no-readme">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <rect x="3" y="3" width="7" height="7"/>
-              <rect x="14" y="3" width="7" height="7"/>
-              <rect x="14" y="14" width="7" height="7"/>
-              <rect x="3" y="14" width="7" height="7"/>
+              <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z"/>
             </svg>
-            <span>元数据</span>
+            <p>暂无 SKILL 内容</p>
           </div>
-          <pre class="metadata-content">{{ JSON.stringify(resource.extra_data, null, 2) }}</pre>
-        </div>
+        </section>
       </div>
+    </template>
 
-      <!-- 空状态 -->
-      <div v-else class="empty-state">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M12 8V12L15 15"/>
-        </svg>
-        <p>资源不存在</p>
-      </div>
-    </main>
-  </div>
+    <!-- 空状态 -->
+    <div v-else class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 8V12L15 15"/>
+      </svg>
+      <p>资源不存在</p>
+    </div>
+  </main>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { resourceApi } from '@/api/resources'
 import { notify } from '@/utils/notification'
 
 const route = useRoute()
-const router = useRouter()
 
 const resource = ref(null)
 const loading = ref(true)
 const installing = ref(false)
 const copied = ref(false)
 const contentViewMode = ref('preview')
-const currentUser = ref(null)
-
-// Get current user from localStorage
-const getCurrentUser = () => {
-  const userStr = localStorage.getItem('user')
-  if (userStr) {
-    try {
-      return JSON.parse(userStr)
-    } catch (e) {
-      return null
-    }
-  }
-  return null
-}
 
 onMounted(() => {
-  currentUser.value = getCurrentUser()
   loadResource()
 })
 
@@ -287,12 +230,6 @@ function copyCommand() {
   })
 }
 
-function openRepository() {
-  if (resource.value?.repository_url) {
-    window.open(resource.value.repository_url, '_blank')
-  }
-}
-
 function formatNumber(num) {
   if (!num) return '0'
   return num.toLocaleString()
@@ -329,146 +266,10 @@ function renderMarkdown(content) {
 
 <style scoped>
 .resource-detail-page {
-  display: flex;
   height: 100vh;
-  background: var(--color-bg-primary);
-}
-
-/* 侧边栏样式 */
-.sidebar {
-  width: 220px;
-  background: var(--color-bg-secondary);
-  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
-}
-
-.sidebar-logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 20px;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.sidebar-logo svg {
-  width: 28px;
-  height: 28px;
-  color: var(--color-blue);
-}
-
-.sidebar-logo span {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.sidebar-nav {
-  flex: 1;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  font-size: 14px;
-  transition: all var(--transition-fast);
-}
-
-.nav-item:hover {
-  color: var(--color-text-primary);
-  background: var(--color-bg-hover);
-}
-
-.nav-item.active {
-  color: var(--color-text-primary);
-  background: var(--color-blue);
-}
-
-.sidebar-footer {
-  padding: 16px;
-  border-top: 1px solid var(--color-border);
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.user-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--color-blue);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 600;
-  color: white;
-}
-
-.user-details {
-  flex: 1;
-  min-width: 0;
-}
-
-.user-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--color-text-primary);
-  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-role {
-  font-size: 12px;
-  color: var(--color-text-muted);
-}
-
-/* 主内容区 */
-.main-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 32px;
-}
-
-/* 返回按钮 */
-.back-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  color: var(--color-text-secondary);
-  font-size: 14px;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  margin-bottom: 24px;
-}
-
-.back-button:hover {
-  background: var(--color-bg-secondary);
-  color: var(--color-text-primary);
-  border-color: var(--color-border-light);
-}
-
-.back-button svg {
-  width: 16px;
-  height: 16px;
 }
 
 /* 加载状态 */
@@ -495,144 +296,90 @@ function renderMarkdown(content) {
   to { transform: rotate(360deg); }
 }
 
-/* 容器 */
-.detail-container {
-  max-width: 900px;
-}
-
-/* 重新设计的头部 */
-.detail-header {
-  padding: var(--space-6);
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  margin-bottom: 24px;
-}
-
-/* 头部行通用样式 */
-.header-row {
+/* 主布局 */
+.detail-layout {
   display: flex;
-  align-items: center;
+  flex: 1;
+  min-height: 0;
+  gap: 0;
 }
 
-/* 第一行：名称 + 类型徽章 + 版本 */
-.header-row-main {
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-4);
-  gap: var(--space-4);
+/* 左侧信息面板 */
+.info-panel {
+  width: 320px;
+  flex-shrink: 0;
+  padding: 24px;
+  background: var(--color-bg-surface);
+  border-right: 1px solid var(--color-border);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
+/* 返回按钮 */
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.back-button:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-light);
+}
+
+.back-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* 资源图标 - 已删除，整合到类型徽章中 */
+
+/* 资源名称 */
 .resource-name {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
   line-height: 1.3;
-  flex: 1;
 }
 
-.header-badges {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex-shrink: 0;
-}
-
-/* 第一行右侧容器 */
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  flex-shrink: 0;
-}
-
-/* 内联元信息 */
-.header-meta-inline {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  font-size: 12px;
-  color: var(--color-text-secondary);
-}
-
-.header-meta-inline .meta-item svg {
-  width: 13px;
-  height: 13px;
-  opacity: 0.7;
-}
-
-.header-meta-inline .meta-item.stat {
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.header-meta-inline .meta-item.stat svg {
-  opacity: 1;
-}
-
-.header-meta-inline .meta-divider {
-  margin: 0 var(--space-2);
-  color: var(--color-border);
-}
-
-.header-meta-inline .meta-item.link-item {
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  position: relative;
-}
-
-.header-meta-inline .meta-item.link-item:hover {
-  color: var(--color-blue);
-}
-
-.header-meta-inline .meta-item.link-item svg {
-  opacity: 0.7;
-}
-
-.header-meta-inline .meta-item.link-item:hover svg {
-  opacity: 1;
-}
-
-.header-meta-inline .external-icon {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  top: 50%;
-  right: -6px;
-  transform: translate(100%, -50%);
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-}
-
-.header-meta-inline .meta-item.link-item:hover .external-icon {
-  opacity: 1;
-}
-
+/* 类型徽章 */
 .type-badge {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  font-size: 11px;
-  font-weight: 700;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .type-badge svg {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
 }
 
 .type-badge.type-skill {
-  background: rgba(33, 150, 243, 0.15);
+  background: rgba(59, 130, 246, 0.15);
   color: var(--color-blue);
 }
 
 .type-badge.type-mcp {
-  background: rgba(0, 255, 0, 0.15);
+  background: rgba(16, 185, 129, 0.15);
   color: var(--color-green);
 }
 
@@ -641,40 +388,35 @@ function renderMarkdown(content) {
   color: var(--color-purple);
 }
 
-.version {
-  padding: 4px 8px;
-  background: var(--color-bg-tertiary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-}
-
-/* 第二行：描述 */
-.header-description {
-  margin-bottom: var(--space-4);
+/* 描述 */
+.description {
   font-size: 14px;
   color: var(--color-text-secondary);
   line-height: 1.6;
 }
 
-/* 第三行：命令区域 */
-.command-area {
+/* 安装区域 */
+.install-section {
   display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  background: var(--color-bg-tertiary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  flex-direction: column;
+  gap: 12px;
 }
 
-.command-area:hover {
+.command-box {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--transition-fast);
+}
+
+.command-box:hover {
   border-color: var(--color-blue);
 }
 
-.command-prompt {
+.prompt {
   color: var(--color-green);
   font-family: 'Courier New', monospace;
   font-size: 14px;
@@ -682,22 +424,23 @@ function renderMarkdown(content) {
   flex-shrink: 0;
 }
 
-.command-text {
+.command {
   flex: 1;
   font-family: 'Courier New', monospace;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--color-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin: 0 8px;
 }
 
-.copy-icon-btn {
+.copy-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: var(--radius-sm);
   border: none;
   background: var(--color-bg-secondary);
@@ -707,104 +450,212 @@ function renderMarkdown(content) {
   flex-shrink: 0;
 }
 
-.copy-icon-btn svg {
-  width: 16px;
-  height: 16px;
-}
-
-.copy-icon-btn:hover {
-  background: var(--color-blue);
-  color: var(--color-bg-primary);
-}
-
-.copy-icon-btn.copied {
-  background: var(--color-green);
-  color: var(--color-bg-primary);
-}
-
-/* 命令行内的安装按钮 */
-.install-inline-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-sm);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid var(--color-border);
-  background: var(--color-blue);
-  color: var(--color-bg-primary);
-  transition: all var(--transition-fast);
-  white-space: nowrap;
-}
-
-.install-inline-btn svg {
+.copy-btn svg {
   width: 14px;
   height: 14px;
 }
 
-.install-inline-btn:hover:not(:disabled) {
+.copy-btn:hover {
+  background: var(--color-blue);
+  color: var(--color-bg-primary);
+}
+
+.copy-btn.copied {
+  background: var(--color-green);
+  color: var(--color-bg-primary);
+}
+
+.install-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: var(--color-blue);
+  color: var(--color-bg-primary);
+  transition: all var(--transition-fast);
+}
+
+.install-action-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.install-action-btn:hover:not(:disabled) {
   background: var(--color-blue-light);
 }
 
-.install-inline-btn:disabled {
+.install-action-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* 内容区域 */
-.content-section {
-  padding: var(--space-6);
-  background: var(--color-bg-secondary);
+/* 统计信息 */
+.stats {
+  display: flex;
+  gap: 8px;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px;
+  background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  margin-bottom: 24px;
+  border-radius: var(--radius-md);
 }
 
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-4);
+.stat-item svg {
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-muted);
 }
 
-.section-header-left {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: 16px;
+.stat-item span:nth-child(2) {
+  font-size: 18px;
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
-.section-header svg {
+.stat-item span:nth-child(3) {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+/* 元信息 */
+.meta-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.meta-row:last-child {
+  border-bottom: none;
+}
+
+.meta-label {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.meta-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.repo-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-blue);
+  text-decoration: none;
+}
+
+.repo-link svg {
+  width: 14px;
+  height: 14px;
+}
+
+.repo-link:hover {
+  text-decoration: underline;
+}
+
+/* 元数据 */
+.extra-data {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.extra-data-header {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.extra-data-content {
+  margin: 0;
+  padding: 12px;
+  font-size: 11px;
+  overflow-x: auto;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-md);
+}
+
+/* 右侧内容区域 */
+.content-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-bg-primary);
+}
+
+.readme-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.readme-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 24px;
+  background: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  flex-shrink: 0;
+}
+
+.readme-header svg {
   width: 18px;
   height: 18px;
   color: var(--color-blue);
 }
 
-/* 模式切换按钮 */
 .view-mode-toggle {
+  margin-left: auto;
   display: flex;
-  gap: 2px;
-  background: var(--color-bg-tertiary);
+  gap: 4px;
+  background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 2px;
+  padding: 3px;
 }
 
 .mode-btn {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-1) var(--space-3);
+  justify-content: center;
+  padding: 6px 12px;
   border: none;
   background: transparent;
   border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
   font-size: 12px;
   font-weight: 500;
-  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -824,26 +675,10 @@ function renderMarkdown(content) {
   color: var(--color-bg-primary);
 }
 
-.mode-btn.active svg {
-  color: var(--color-bg-primary);
-}
-
-/* Markdown 源码显示 */
-.markdown-source {
-  background: var(--color-bg-tertiary);
-  padding: var(--space-4);
-  border-radius: var(--radius-md);
-  margin: 0;
-  font-size: 13px;
-  font-family: 'Courier New', monospace;
-  overflow-x: auto;
-  color: var(--color-text-secondary);
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-/* README */
 .readme-content {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
   line-height: 1.7;
   color: var(--color-text-secondary);
 }
@@ -857,7 +692,7 @@ function renderMarkdown(content) {
 }
 
 .readme-content :deep(code) {
-  background: var(--color-bg-tertiary);
+  background: var(--color-bg-elevated);
   padding: 2px 6px;
   border-radius: var(--radius-sm);
   font-family: 'Courier New', monospace;
@@ -866,7 +701,7 @@ function renderMarkdown(content) {
 }
 
 .readme-content :deep(pre) {
-  background: var(--color-bg-tertiary);
+  background: var(--color-bg-elevated);
   padding: var(--space-4);
   border-radius: var(--radius-md);
   overflow-x: auto;
@@ -878,15 +713,36 @@ function renderMarkdown(content) {
   background: none;
 }
 
-/* 元数据 */
-.metadata-content {
-  background: var(--color-bg-tertiary);
-  padding: var(--space-4);
-  border-radius: var(--radius-md);
+.markdown-source {
+  flex: 1;
   margin: 0;
-  font-size: 12px;
-  overflow-x: auto;
+  padding: 24px;
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
+  overflow: auto;
   color: var(--color-text-secondary);
+  background: var(--color-bg-elevated);
+}
+
+.no-readme {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-text-muted);
+}
+
+.no-readme svg {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.no-readme p {
+  margin: 0;
+  font-size: 14px;
 }
 
 /* 空状态 */
@@ -912,55 +768,19 @@ function renderMarkdown(content) {
 }
 
 /* 响应式 */
-@media (max-width: 640px) {
-  .sidebar {
-    display: none;
-  }
-
-  .main-content {
-    padding: 20px;
-  }
-
-  .header-row-main {
+@media (max-width: 768px) {
+  .detail-layout {
     flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-3);
   }
 
-  .header-right {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-3);
+  .info-panel {
     width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
   }
 
-  .header-badges {
-    width: 100%;
-  }
-
-  .header-meta-inline {
-    font-size: 11px;
-    flex-wrap: wrap;
-  }
-
-  .resource-name {
-    font-size: 20px;
-  }
-
-  .command-area {
-    flex-wrap: wrap;
-    padding: var(--space-3);
-  }
-
-  .command-text {
-    min-width: 0;
-    flex-basis: 100%;
-    margin-bottom: var(--space-2);
-  }
-
-  .install-inline-btn {
-    width: 100%;
-    justify-content: center;
+  .content-panel {
+    min-height: 400px;
   }
 }
 </style>
