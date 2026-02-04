@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(python:*)",
+      "Bash(chcp:*)",
+      "Bash(cmd /c \"chcp 65001 && python src/ui-ux-pro-max/scripts/search.py \"\"SaaS modern tech dashboard\"\" --design-system -p \"\"AI Native 研发平台\"\"\")",
+      "Bash(cd:*)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(powershell:*)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run build:*)",
+      "Bash(ls:*)",
+      "Bash(wc:*)"
+    ]
+  }
+}

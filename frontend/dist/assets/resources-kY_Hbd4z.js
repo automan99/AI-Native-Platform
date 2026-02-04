@@ -1,0 +1,1 @@
+import{j as r}from"./index-B70JlMxX.js";const s={getList(e){return r.get("/resources",{params:e})},getDetail(e){return r.get(`/resources/${e}`)},recordInstall(e){return r.post(`/resources/${e}/install`)},getTop(e){return r.get("/resources/top",{params:e})},getLatest(e){return r.get("/resources/latest",{params:e})}};export{s as r};
