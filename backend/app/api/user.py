@@ -1,11 +1,24 @@
 """
 User API - 用户配置管理 API
 """
-from flask import Blueprint, request, jsonify
+import os
+import uuid
+from flask import Blueprint, request, jsonify, current_app
+from werkzeug.utils import secure_filename
 from app.utils.decorators import token_required
 from app.services.user_service import UserService
 
 user_bp = Blueprint('user', __name__)
+
+# 允许的图片格式
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+
+
+def allowed_file(filename):
+    """检查文件扩展名是否允许"""
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @user_bp.route('/profile', methods=['GET'])
@@ -78,4 +91,57 @@ def update_avatar(current_user):
     if result['success']:
         return jsonify(result)
     else:
+        return jsonify(result), 404
+
+
+@user_bp.route('/avatar/upload', methods=['POST'])
+@token_required
+def upload_avatar(current_user):
+    """上传头像文件"""
+    # 检查是否有文件
+    if 'file' not in request.files:
+        return jsonify({'success': False, 'message': '请选择文件'}), 400
+
+    file = request.files['file']
+
+    # 检查文件名
+    if file.filename == '':
+        return jsonify({'success': False, 'message': '请选择文件'}), 400
+
+    # 检查文件类型
+    if not allowed_file(file.filename):
+        return jsonify({'success': False, 'message': '只支持 PNG、JPG、JPEG、GIF、WEBP 格式的图片'}), 400
+
+    # 检查文件大小
+    file.seek(0, os.SEEK_END)
+    file_size = file.tell()
+    file.seek(0)
+
+    if file_size > MAX_FILE_SIZE:
+        return jsonify({'success': False, 'message': '文件大小不能超过 5MB'}), 400
+
+    # 生成唯一文件名
+    file_extension = file.filename.rsplit('.', 1)[1].lower()
+    unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
+
+    # 确保上传目录存在
+    upload_dir = os.path.join(current_app.root_path, '..', 'uploads', 'avatars')
+    os.makedirs(upload_dir, exist_ok=True)
+
+    # 保存文件
+    file_path = os.path.join(upload_dir, unique_filename)
+    file.save(file_path)
+
+    # 生成访问 URL
+    avatar_url = f"/uploads/avatars/{unique_filename}"
+
+    # 更新用户头像
+    result = UserService.update_avatar(current_user['id'], avatar_url)
+
+    if result['success']:
+        return jsonify(result)
+    else:
+        # 如果更新失败，删除已上传的文件
+        if os.path.exists(file_path):
+            os.remove(file_path)
         return jsonify(result), 404

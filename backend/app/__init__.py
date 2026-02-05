@@ -45,6 +45,16 @@ def create_app(config_class=Config):
     git_repos_dir = app.config.get('GIT_REPOS_DIR', './git_repos')
     os.makedirs(git_repos_dir, exist_ok=True)
 
+    # 创建上传文件存储目录
+    uploads_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'uploads')
+    os.makedirs(os.path.join(uploads_dir, 'avatars'), exist_ok=True)
+
+    # 提供上传文件的静态访问
+    from flask import send_from_directory
+    @app.route('/uploads/<path:filename>')
+    def serve_upload(filename):
+        return send_from_directory(uploads_dir, filename)
+
     # 初始化定时任务
     from app.services.scheduler_service import init_scheduler
     init_scheduler(app)

@@ -840,13 +840,13 @@ function getSyncStatusText(server) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-6);
+  margin-bottom: 24px;
 }
 
 .page-title {
   font-size: 18px;
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: #fff;
   margin: 0;
 }
 
@@ -855,12 +855,12 @@ function getSyncStatusText(server) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-6);
+  margin-bottom: 24px;
 }
 
 .server-count {
   font-size: 13px;
-  color: var(--color-text-muted);
+  color: #888;
 }
 
 /* ==================== 按钮 ==================== */

@@ -591,20 +591,6 @@ export default {
   padding: var(--space-4) var(--space-6) 0;
   border-bottom: 1px solid var(--color-border-subtle);
   flex-shrink: 0;
-  overflow-x: auto;
-}
-
-.tabs-bar::-webkit-scrollbar {
-  height: 4px;
-}
-
-.tabs-bar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.tabs-bar::-webkit-scrollbar-thumb {
-  background: #444;
-  border-radius: 2px;
 }
 
 .tab-btn {

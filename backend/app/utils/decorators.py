@@ -37,6 +37,7 @@ def token_required(f):
         # 将用户信息添加到 request 对象
         request.current_user = user
 
+        # 不传递参数，被装饰的函数通过 request.current_user 访问用户信息
         return f(*args, **kwargs)
 
     return decorated_function
